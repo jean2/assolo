@@ -1,3 +1,4 @@
+/* FILE: open_files_rcv.c */
 
 #include "assolo_rcv.h"
 
@@ -7,10 +8,7 @@ name>_<starting timestamp>.{instbw,par}
 
 ".instbw" contains <time> <mean>
 
-".par" contains the parameters of the experiment for
-future reference
-*/
-
+".par" contains the parameters of the experiment for future reference */
 void open_dump_files(char *src,char *dst)
 {
 	char instbw_file_name[MAXFNAME];

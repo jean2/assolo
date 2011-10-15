@@ -1,3 +1,7 @@
+/* FILE: assolo_run.h */
+
+#ifndef _assolo_run_
+#define _assolo_run_ 1
 
 #include "../config.h"
 #include <stdio.h>
@@ -19,9 +23,10 @@
 #include <sys/uio.h>
 #include <arpa/inet.h>
 #include <sched.h> 
+
 #include "realtime.h"
 #include "assolo.h"
 
-#define RTTUSEC 1000000 /*assuming RTT is 1000 millisec*/
+#define RTTUSEC 1000000 /* assuming RTT is 1000 millisec*/
 
-
+#endif

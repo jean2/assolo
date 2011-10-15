@@ -1,33 +1,7 @@
+/* FILE: control_rcv.c */
+
 #include "assolo_rcv.h"
-
-double htonll(double input)
-{
-    // Test if Big or LittleEndian
-    short int word = 0x0001;			// Works this way: word 16 byte char 8 byte
-    char     *byte = (char *) &word;	// shortened => (0000) 0001 ... If BE => (0001) 0000 = 0 | if LE => (0000) 0001 = 1
-
-    if(byte[0] == 1) // Little Endian - swap bits
-    {// TODO Double values representation and sizeof can change on different system...
-    	double output 	   = 0.0;
-    	unsigned char *src = (unsigned char *)&input;
-        unsigned char *dst = (unsigned char *)&output;
-
-        dst[0] = src[7];
-    	dst[1] = src[6];
-    	dst[2] = src[5];
-    	dst[3] = src[4];
-    	dst[4] = src[3];
-    	dst[5] = src[2];
-    	dst[6] = src[1];
-    	dst[7] = src[0];
-
-    	return(output);
-    }
-    else // Big Endian - nothing to do here
-    {
-    	return(input);
-    }
-}
+#include "network_tools.h"
 
 /* send control packet to sender*/
 void send_pkt(int state)
@@ -61,22 +35,25 @@ void send_pkt(int state)
     	case UPDATE_RATES:
     		// Send always in network byte order (Big Endian) over the networklink
 
-    		// Integer Values - use ntonl/htonl to adjust byteorder (Little-/BigEndian) for network transmission
+    		/* Integer Values - use ntonl/htonl to adjust byteorder (Little-/BigEndian) for network transmission */
     		pkt->request_type	  = htonl( (u_int32_t) UPDATE_RATES);
 			pkt->filter			  = htonl( (u_int32_t) filter);
 			pkt->jumbo			  = htonl( (u_int32_t) jumbo);
 			pkt->num_interarrival = htonl( (u_int32_t) num_interarrival);
 			pkt->pktsize		  = htonl( (u_int32_t) pktsize);
 
-			// Double values - use own htonll function (defined in this file)
-			// TODO Double values representation and sizeof can change on different system...
-			pkt->high_rate		  = htonll(high_rate);
-			pkt->inter_chirp_time = htonll(inter_chirp_time);
-			pkt->low_rate		  = htonll(low_rate);
-			pkt->soglia			  = htonll(soglia);
-			pkt->spread_factor	  = htonll(spread_factor);
 
-			fprintf(stderr,"\nHR: %f\tIC: %f\tLR: %f\tT: %f\tSF: %f\n", high_rate,inter_chirp_time,low_rate,soglia,spread_factor);
+			// 64 Bit Integer values - used for sending double values over the network.
+			// This will mostly prevent different sizes and representation of double mess up the values
+			//  - Transform the double into uint64 (IEEE-754)
+			//  - Adjust Endianess
+			pkt->high_rate		  = htonll( pack754_64(high_rate) );
+			pkt->inter_chirp_time = htonll( pack754_64(inter_chirp_time) );
+			pkt->low_rate		  = htonll( pack754_64(low_rate) );
+			pkt->soglia			  = htonll( pack754_64(soglia) );
+			pkt->spread_factor	  = htonll( pack754_64(spread_factor) );
+
+			/* fprintf(stderr,"\n\nHR: %f\tIC: %f\tLR: %f\tT: %f\tSF: %f\n", high_rate,inter_chirp_time,low_rate,soglia,spread_factor); */
 
       	break;
     	case STOP:
@@ -95,9 +72,7 @@ void send_pkt(int state)
 
   	/* figure out checksum and write to buffer */
   	pkt->checksum=htonl(gen_crc_rcv2snd(pkt));
-  	cc = write (soudp, (char *)pkt,sizeof(struct control_rcv2snd));
-
-  	/*       cc = sendto (soudp,data_snd,sizeof(struct control_rcv2snd),0,(struct sockaddr *)&src,sizeof(src));*/
+	cc = write (soudp, (char *)pkt,sizeof(struct control_rcv2snd));
 
   	if (cc<0)
   	{
@@ -279,13 +254,18 @@ void initiate_connection()
 	pkt->num_interarrival = htonl( (u_int32_t) num_interarrival);
 	pkt->pktsize		  = htonl( (u_int32_t) pktsize);
 
-	// Double values - use own htonll function (defined in this file)
-	// TODO Double values representation and sizeof can change on different system...
-	pkt->high_rate		  = htonll(high_rate);
-	pkt->inter_chirp_time = htonll(inter_chirp_time);
-	pkt->low_rate		  = htonll(low_rate);
-	pkt->soglia			  = htonll(soglia);
-	pkt->spread_factor	  = htonll(spread_factor);
+	// 64 Bit Integer values
+	// The double values are recoded into an Int64 based on the standard IEEE-754, after transmit they will be reassembled back to double.
+	// This will mostly prevent the problem of different sizes and representation of double on different platforms
+	//  - Transform the double into uint64 (IEEE-754)
+	//  - Adjust Endianess for Networktransfer
+	pkt->high_rate		  = htonll( pack754_64( (high_rate) ) );
+	pkt->inter_chirp_time = htonll( pack754_64( (inter_chirp_time) ) );
+	pkt->low_rate		  = htonll( pack754_64( (low_rate) ) );
+	pkt->soglia			  = htonll( pack754_64( (soglia) ) );
+	pkt->spread_factor	  = htonll( pack754_64( (spread_factor) ) );
+
+	/* fprintf(stderr,"\n\nHR: %f\tIC: %f\tLR: %f\tT: %f\tSF: %f\n", high_rate,inter_chirp_time,low_rate,soglia,spread_factor); */
 
 	/* request connection */
    	state=REQ_CONN;

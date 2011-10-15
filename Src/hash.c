@@ -1,3 +1,4 @@
+/* FILE: hash.c */
 
 /* cryptographic hash function for authentication */
 
@@ -23,7 +24,6 @@ They must be the same at sender and receiver and unknown to anyone else.
 */
 
 #include "assolo_snd.h"
-
 
 #define XORMASK1 0x7ab04793L
 #define XORMASK2 0x02ef4c83L
@@ -55,8 +55,7 @@ u_int32_t hash(u_int32_t crc, u_int32_t element)
 
 
 /* Split the 64 Bit into 2x 32Bit to generate the crc for each elememt and return it*/
-// TODO Double values representation and sizeof can change on different system...
-u_int32_t gen_crc_double(double value, u_int32_t crc)
+u_int32_t gen_crc_unint64(u_int64_t value, u_int32_t crc)
 {
   	u_int32_t 	   Split00_15 = 0;	// for double values (64Bit) we need 32Bit for our crc => splitting
   	u_int32_t 	   Split16_32 = 0;	// ...
@@ -105,13 +104,12 @@ u_int32_t gen_crc_rcv2snd(struct control_rcv2snd *pkt)
   	crc = hash(crc, ntohl(pkt->filter));
   	crc = hash(crc, ntohl(pkt->pktsize));
 
-  	// Double values - split the 64bit double into 2x 32 Bit and build the crc over each element
-  	// TODO Double values representation and sizeof can change on different system...
-  	crc = gen_crc_double(pkt->spread_factor, crc);
-  	crc = gen_crc_double(pkt->soglia, crc);
-  	crc = gen_crc_double(pkt->low_rate, crc);
-  	crc = gen_crc_double(pkt->high_rate, crc);
-  	crc = gen_crc_double(pkt->inter_chirp_time, crc);
+  	// 64 Bit Integer values - Split the 64bit into 2x 32 Bit and build the crc over each element
+  	crc = gen_crc_unint64(pkt->spread_factor, crc);
+  	crc = gen_crc_unint64(pkt->soglia, crc);
+  	crc = gen_crc_unint64(pkt->low_rate, crc);
+  	crc = gen_crc_unint64(pkt->high_rate, crc);
+  	crc = gen_crc_unint64(pkt->inter_chirp_time, crc);
 
   	return(crc);
 }

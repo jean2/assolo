@@ -1,7 +1,7 @@
+/* FILE: compute_bw_contestsw_rcv.c */
 #include "assolo_rcv.h"
 
 extern void check_reorder_loss();
-
 
 int int_coal_detected=0;/*flag to say interrupt coalescence detected*/
 
@@ -138,7 +138,6 @@ void write_instant_bw(double inst_av_bw_excursion,double time_stamp, int nc)
 }
 
 /* compute the instantaneous bandwidth during this chirp, new algorithm */
-
 double compute_inst_bw_excursion()
 {
   	int cur_loc=1;/* current location in chirp */

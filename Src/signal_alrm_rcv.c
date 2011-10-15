@@ -6,7 +6,6 @@ extern void sig_alrm(int signo);
 extern void sig_pipe(int signo);
 
 /* from Figure 5.6, UNIX network programming */
-
 Sigfunc *Signal(int signo, Sigfunc *func)
 {
 	struct sigaction act, oact;

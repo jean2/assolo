@@ -1,5 +1,6 @@
-#include "assolo_rcv.h"
+/* FILE: parse_cmd_line_rcv.c */
 
+#include "assolo_rcv.h"
 
 /* get command line parameters */
 void parse_cmd_line_rcv(argc,argv) int	argc; char	*argv[];

@@ -1,5 +1,5 @@
+/* FILE: assolo_run.c */
 /*
- * assolo_run.c
  * Copyright (c) 2005 Rice University
  * All Rights Reserved.
  *
@@ -53,69 +53,54 @@ the experiment fromt the receiver module and writes these to a file.
 #include <unistd.h>
 #include <sys/uio.h>
 #include <arpa/inet.h>
+
 #include "assolo_run.h"
 
-FILE *fd_instbw;/* file pointers for output files*/
-FILE *fd_debug;/* file pointers for debug files*/
+FILE *fd_instbw;	/* file pointers for output files*/
+FILE *fd_debug;		/* file pointers for debug files*/
 
-struct in_addr src_addr;
-struct in_addr dest_addr;
-int fromlen=1;/*must be non-zero, used in recvfrom*/
-int debug=0;
-int jumbo=1;/*number of pkts per jumbo packet */
+struct in_addr 			src_addr;
+struct in_addr 			dest_addr;
+struct itimerval 		cancel_time;
+struct itimerval		timeout;	/* used in setitimer*/
+struct sockaddr_in 		src;		/* socket addr for outgoing packets */
+struct sockaddr_in 		dest;		/* socket addr for incoming packets */
+struct itimerval 		wait_time;	/* sigalrm time */
+struct control_rcv2snd  *pkt;		/* control packet pointer*/
+struct udprecord 		*udprecord;	/* log record for a packet */
 
-int num_inst_bw=11;/* number of estimates to smooth over for mean */
+int fromlen			   = 1;			/* must be non-zero, used in recvfrom*/
+int debug			   = 0;
+int jumbo 			   = 1;			/* number of pkts per jumbo packet */
+int num_inst_bw		   = 11;		/* number of estimates to smooth over for mean */
+int cc				   = 0;
+int state			   = 0;
+int ack_not_rec_count  = 0;
+int busy_period_thresh = 5;			/* parameters for excursion detection algorithm */
+int filter			   = 0;
+int pktsize			   = 1000;		/* parameters for excursion detection algorithm */
+int num_pkts_in_info   = 0;			/* how big packet_info currently is*/
+int sndPort			   = SNDPORT;	/* destination UDP port */
+int net_option		   = 1; 		/* network option, Gbps or not */
+int sotcp;							/*socket for tcp connection */ 	/* parameters for excursion detection algorithm */
+int num_interarrival;			 	/* number of different interarrivals to keep track of */
 
-int cc=0;
-int state=0,ack_not_rec_count=0;
-struct control_rcv2snd *pkt;/*control packet pointer*/
-char data_snd[MAXMESG];		/* Maxm size packet */
-struct itimerval cancel_time,timeout;/* used in setitimer*/
-struct sockaddr_in src;	/* socket addr for outgoing packets */
-struct sockaddr_in dest;	/* socket addr for incoming packets */
-
+char data_snd[MAXMESG];			 /* Maxm size packet */
+char data[MAXMESG];				 /* Maxm size packet */
 char hostname[MAXHOSTNAMELEN];
+char rxhostname[MAXHOSTNAMELEN]; /*string with local host name*/
 
-char data[MAXMESG];		/* Maxm size packet */
-struct udprecord *udprecord;	/* log record for a packet */
-
-double stop_time;/*time to stop experiment */
-
-/* parameters for excursion detection algorithm */
-double decrease_factor=1.5;
-int busy_period_thresh=5;
-
-int sotcp;/*socket for tcp connection */
-int pktsize=1000;
-
-/*rate range in chirp (Mbps)*/
-double low_rate=DEFAULT_MIN_RATE,high_rate=DEFAULT_MAX_RATE,avg_rate=DEFAULT_AVG_RATE;
-
-/*default values*/
-double soglia=DEFAULT_SGL;
-int filter=0;
-
-double spread_factor=1.2; /* decrease in spread of packets within the
-                             chirp*/
-
-int num_interarrival;/* number of different interarrivals to keep track of */
-
-int num_pkts_in_info=0;/* how big packet_info currently is*/
-
-int sndPort = SNDPORT;	/* destination UDP port */
-
-int net_option=1; /* network option, Gbps or not */
-
-char rxhostname[MAXHOSTNAMELEN];/*string with local host name*/
-
-double min_timer;/*minimum timer granularity*/
-
-struct itimerval wait_time;/* sigalrm time */
+double low_rate		   = DEFAULT_MIN_RATE;
+double high_rate	   = DEFAULT_MAX_RATE;
+double avg_rate 	   = DEFAULT_AVG_RATE;	/* rate range in chirp (Mbps)*/
+double soglia		   = DEFAULT_SGL;
+double spread_factor   = 1.2; 				/* decrease in spread of packets within the chirp*/
+double decrease_factor = 1.5;				/* parameters for excursion detection algorithm */ /* parameters for excursion detection algorithm */
+double stop_time;		/* time to stop experiment */
+double min_timer;		/* minimum timer granularity*/
 
 
-
-
-
+/* //TODO Comment Function */
 void open_dump_files(char *src,char *dst)
 {
 
@@ -164,6 +149,7 @@ void open_dump_files(char *src,char *dst)
 
 }
 
+/* //TODO Comment Function */
 in_addr_t gethostaddr(name) char *name;
 {
    	in_addr_t addr;
@@ -766,7 +752,7 @@ void connect_to_rcv(int argc,char **argv_ptr)
 }
 #endif
 
-
+   /* //TODO Comment Function */
 int main(argc,argv) int	argc; char	*argv[];
 {
 

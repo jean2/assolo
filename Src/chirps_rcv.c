@@ -1,8 +1,8 @@
+/* FILE: chirp_rcv.h */
 #include "assolo_rcv.h"
 #include <math.h>
 
 extern void sig_alrm(int signo);
-
 
 /* recording contents of packet. Using inline to make code run faster */
 inline void update_info(u_int32_t nc,u_int32_t np,double snd_time,double rcv_time,u_int32_t pkt_req_num,int good_jumbo_pkt)

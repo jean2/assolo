@@ -1,5 +1,5 @@
+/* FILE: assolo_snd.c */
 /*
- * assolo_snd.c
  * Copyright (c) 2003 Rice University
  * All Rights Reserved.
  *
@@ -64,89 +64,55 @@
  *
  * We return 0 if we can't find anything.
  */
-
 #include "assolo_snd.h"
 #include "delay.h"
+#include "network_tools.h"
 
-#define PKTSIZE		1400		/* default packet size */
+#define PKTSIZE		1400	/* default packet size */
 #define MAXHNAME	100		/* maximum hostname size */
 
-struct sockaddr_in snd;/* used in binding */
-struct	sockaddr_in dst;	/* destination internet address, one is for the valid destination address and the other */
+socklen_t fromlen=1;	/*must be non-zero, used in recvfrom*/
 
-u_int32_t request_num;
-int num_interarrival;/* number of packets in a chirp minus one */
-socklen_t fromlen=1;/*must be non-zero, used in recvfrom*/
-int debug=0;
-double inter_chirp_time;
-int connected=0;/*0=not connected, 1 = connected*/
-int sndPort=SNDPORT;
-char	data[MAXMESG];		/* Maxm size packet */
-char	data_rcv[MAXMESG];		/* Maxm size packet */
-int soudp;
-int prev_rcv_pkt_num=0;
-
-  struct	timeval	*tp, tp1;		/* used for getting timeofday */
-int cc;
-int recv_ok_count=0;
-int	pktsize = PKTSIZE;	/* packet size */
-
-u_int32_t jumbo=1;/*each jumbo chirp "packet" consists of jumbo number of packets*/
-u_int32_t chal_no;
-double	gap = 0;		/* gap in us between 2 trains */
-double	sleeptime = 0;	/* sleep in us between 2 bulks */
-
-double   largest_inter_arrival=0;/* min/largest inter arrival in the chirp in us*/
-double   low_rate=1.0;/*lowest rate (Mbps) to probe at*/
-
-
-double high_rate = 1.0;
-double soglia = 0.05;
-
-double avg_rate=0.3;/*avg. rate (Mbps) to probe at */
-double duration=600.0;/* time in seconds for which to probe at */
-double chirp_duration=0.0;/* duration of a chirp */
-double spread_factor=1.2; /* decrease in spread of packets within the chirp*/
-int	pktsend = 0;		/* number of packets sent so far */
-int	write_error = NO;	/* error on sending a packet */
-int	np;			/* index variable for packet-count */
-int	nc=1;			/* index variable for chirp-count */
-
-struct	udprecord *sendpkt;	/* udp packet content */
-
+struct sockaddr_in     snd;		 /* used in binding */
+struct sockaddr_in 	   dst;		 /* destination internet address, one is for the valid destination address and the other */
+struct timeval		   *tp, tp1; /* used for getting timeofday */
+struct udprecord 	   *sendpkt; /* udp packet content */
 struct control_rcv2snd *rcvpkt;
 
-double ntohll(double input)
-{
-    // Test if Big or LittleEndian
-    short int word = 0x0001;			// Works this way: word 16 byte char 8 byte
-    char     *byte = (char *) &word;	// shortened => (0000) 0001 ... If BE => (0001) 0000 = 0 | if LE => (0000) 0001 = 1
+u_int32_t jumbo = 1;	/*each jumbo chirp "packet" consists of jumbo number of packets*/
+u_int32_t request_num;
+u_int32_t chal_no;
 
-    if(byte[0] == 1) // Little Endian - swap bits
-    {// TODO Double values representation and sizeof can change on different system...
-    	double output 	   = 0.0;
-    	unsigned char *src = (unsigned char *)&input;
-        unsigned char *dst = (unsigned char *)&output;
+int debug			 = 0;
+int	nc				 = 1;		/* index variable for chirp-count */
+int prev_rcv_pkt_num = 0;
+int connected		 = 0;		/*0=not connected, 1 = connected*/
+int sndPort			 = SNDPORT;
+int recv_ok_count	 = 0;
+int	pktsize			 = PKTSIZE;	/* packet size */
+int	pktsend			 = 0;		/* number of packets sent so far */
+int	write_error		 = NO;		/* error on sending a packet */
+int	np;					/* index variable for packet-count */
+int cc;
+int soudp;
+int num_interarrival;	/* number of packets in a chirp minus one */
 
-        dst[0] = src[7];
-    	dst[1] = src[6];
-    	dst[2] = src[5];
-    	dst[3] = src[4];
-    	dst[4] = src[3];
-    	dst[5] = src[2];
-    	dst[6] = src[1];
-    	dst[7] = src[0];
+char data[MAXMESG];		/* Maxm size packet */
+char data_rcv[MAXMESG];	/* Maxm size packet */
 
-    	return(output);
-    }
-    else // Big Endian - nothing to do here
-    {
-    	return(input);
-    }
-}
+double gap					 = 0;		/* gap in us between 2 trains */
+double sleeptime			 = 0;		/* sleep in us between 2 bulks */
+double largest_inter_arrival = 0;		/* min/largest inter arrival in the chirp in us*/
+double low_rate				 = 1.0;		/*lowest rate (Mbps) to probe at*/
+double high_rate			 = 1.0;
+double soglia				 = 0.05;
+double avg_rate				 = 0.3;		/*avg. rate (Mbps) to probe at */
+double duration				 = 600.0;	/* time in seconds for which to probe at */
+double chirp_duration		 = 0.0;		/* duration of a chirp */
+double spread_factor		 = 1.2; 	/* decrease in spread of packets within the chirp*/
+double inter_chirp_time;
 
 /* Usage information */
-
 int usage()
 {
    	(void) fprintf (stderr, "usage: assolo_snd [-h] <more options>\n");
@@ -158,6 +124,7 @@ int usage()
    	(void) exit (1);
 }
 
+/* //TODO Comment Function */
 void parse_cmd_line(argc,argv)
   int	argc;
      char	*argv[];
@@ -289,7 +256,7 @@ void unconnect_so()
    	return;
 }
 
-
+/* //TODO Comment Function */
 inline void send_pkt()
 {
   	u_int32_t crc;
@@ -328,10 +295,7 @@ inline void send_pkt()
 
 }
 
-/*
-  Setting number of packets, packet interarrival times etc.
-*/
-
+/* Setting number of packets, packet interarrival times etc */
 int compute_parameters()
 {
   	int count;
@@ -339,6 +303,8 @@ int compute_parameters()
   	int k;
 
   	double thr;
+
+
 
   	// Received Data always in network byte order (Big Endian)
 
@@ -349,20 +315,23 @@ int compute_parameters()
   	pktsize			 = (int) ntohl(rcvpkt->pktsize);
   	request_num		 = (int) ntohl(rcvpkt->request_num);
 
-	// Double values - use own ntohll function (defined in this file)
-    // TODO Double values representation and sizeof can change on different system...
-	high_rate 		 = ntohll(rcvpkt->high_rate);
-	inter_chirp_time = ntohll(rcvpkt->inter_chirp_time);
-	low_rate		 = ntohll(rcvpkt->low_rate);
-	soglia			 = ntohll(rcvpkt->soglia);
-	spread_factor	 = ntohll(rcvpkt->spread_factor);
+
+  	// 64 Bit Integer values
+	// The received int64 values are recoded back into double. (IEEE-754)
+	// This will mostly prevent the problem of different sizes and representation of double on different platforms
+	//  - Adjust Endianess to Host of the int64
+	//  - Transform the unint64 into double (IEEE-754)
+	high_rate 		 = ( unpack754_64( ntohll(rcvpkt->high_rate) ) );
+	inter_chirp_time = ( unpack754_64( ntohll(rcvpkt->inter_chirp_time) ) );
+	low_rate		 = ( unpack754_64( ntohll(rcvpkt->low_rate) ) );
+	soglia			 = ( unpack754_64( ntohll(rcvpkt->soglia) ) );
+	spread_factor	 = ( unpack754_64( ntohll(rcvpkt->spread_factor) ) );
+
+	/* fprintf(stderr,"\n\nHR: %f\tIC: %f\tLR: %f\tT: %f\tSF: %f\n", high_rate,inter_chirp_time,low_rate,soglia,spread_factor); */
 
   	// Adjust received values for computing
   	inter_chirp_time = inter_chirp_time * 1000000.0; 	//TODO inter_chirp Adjustment for ... ???
   	soglia			 = soglia / 100.0;					// f.e 5% to 0.05 for Threshold calculation
-
-  	if(debug)
-  		fprintf(stderr,"ict=%f,low=%f,sf=%f,psize=%d,rqnum=%d,numiat=%d\n",inter_chirp_time,low_rate,spread_factor,pktsize,request_num,num_interarrival);
 
   	/*check if parameters ok*/
   	if (pktsize<40 || spread_factor<1.05 || inter_chirp_time<0.0 || low_rate<0.0 || num_interarrival<1 || jumbo<1 || jumbo>20)
@@ -511,6 +480,7 @@ void recv_pkt()
   	}
 
   	if(debug) fprintf(stderr,"got packet,len=%d\n",cc);
+
 
   	if(check_crc_rcv2snd(rcvpkt))/*if packet good*/
     {
@@ -724,7 +694,6 @@ void setup_socket_and_wait()
 
 
 /* main function  */
-
 int main(argc, argv)
      int	argc;
      char	*argv[];

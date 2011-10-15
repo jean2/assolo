@@ -7,8 +7,8 @@ CPU = @host_cpu@
 SRC=	Src
 BIN=	Bin/$(CPU)
 UOBJS=   $(SRC)/assolo_run.c 
-SOBJS=   $(SRC)/assolo_snd.c $(SRC)/realtime.c $(SRC)/hash.c
-ROBJS=   $(SRC)/realtime.c $(SRC)/assolo_rcv.c $(SRC)/alloc_rcv.c $(SRC)/chirps_rcv.c $(SRC)/compute_bw_contextsw_rcv.c $(SRC)/loss_reorder_rcv.c $(SRC)/open_files_rcv.c $(SRC)/parse_cmd_line_rcv.c $(SRC)/signal_alrm_rcv.c  $(SRC)/control_rcv.c $(SRC)/hash.c
+SOBJS=   $(SRC)/assolo_snd.c $(SRC)/realtime.c $(SRC)/hash.c $(SRC)/network_tools.c
+ROBJS=   $(SRC)/realtime.c $(SRC)/assolo_rcv.c $(SRC)/alloc_rcv.c $(SRC)/chirps_rcv.c $(SRC)/compute_bw_contextsw_rcv.c $(SRC)/loss_reorder_rcv.c $(SRC)/open_files_rcv.c $(SRC)/parse_cmd_line_rcv.c $(SRC)/signal_alrm_rcv.c  $(SRC)/control_rcv.c $(SRC)/hash.c $(SRC)/network_tools.c
 OBJS=    $(SOBJS) $(ROBJS)
 
 TARGETS=$(BIN)/assolo_run $(BIN)/assolo_snd $(BIN)/assolo_rcv 

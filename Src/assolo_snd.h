@@ -1,3 +1,6 @@
+/* FILE: assolo_snd.h */
+#ifndef _assolo_snd_
+#define _assolo_snd_ 1
 
 #include "../config.h"
 #include <string.h>
@@ -24,11 +27,15 @@
 #include "assolo.h"
 #include "realtime.h"
 
+extern struct control_rcv2snd *pkt;
+
 extern u_int32_t hash(u_int32_t, u_int32_t);
 extern u_int32_t gen_crc_rcv2snd(struct control_rcv2snd *);
-extern int check_crc_rcv2snd(struct control_rcv2snd *);
 extern u_int32_t gen_crc_snd2rcv(struct udprecord *);
+
 extern int check_crc_snd2rcv(struct udprecord *);
+extern int check_crc_rcv2snd(struct control_rcv2snd *);
+
 extern void handle_request(u_int32_t);
 
-extern struct control_rcv2snd *pkt;
+#endif

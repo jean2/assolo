@@ -1,6 +1,10 @@
+/* FILE: realtime.c */
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdio.h>
+
+#include "realtime.h"
 
 #ifdef HAVE_SCHED_H
 #include <sched.h>
@@ -9,8 +13,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "realtime.h"
-
+/* //TODO Comment Function */
 void lockMe()
 {
     if(geteuid() == 0)

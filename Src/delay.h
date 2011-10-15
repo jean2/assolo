@@ -1,6 +1,8 @@
+/* FILE: delay.h */
+#ifndef _delay_
+#define _delay_ 1
 /*
- * delay.h
- * Copyright (c) 2003 Rice University
+  * Copyright (c) 2003 Rice University
  * All Rights Reserved.
  *
  * Permission to use, copy, modify, distribute, and sell this software
@@ -27,9 +29,7 @@
  *          Niels Kang Hoven (nhoven@rice.edu)
  */
 
-
-
-#include<stdio.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -48,7 +48,7 @@
 //period that linux seems to have
 
 
-
+/* //TODO Comment Function */
 inline void smartwait(unsigned int delg, struct timeval *tpcur)
 {
   	unsigned int delsofar;
@@ -96,7 +96,6 @@ inline void smartwait2(unsigned int delg)
 //a macro that "returns" after delg microseconds, never
 //sleeps, a true busy wait. Uses processor cycles like crazy
 //you probably will never want to use this.
-
 #define busywait(delg) do {\
     gettimeofday(&tpstart,(struct timezone *)0); \
     delsofar = 0;\
@@ -112,3 +111,4 @@ unsigned int delsofar; //amount of delay we have had so far
 int count;
 unsigned int msr;
 
+#endif

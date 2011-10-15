@@ -1,5 +1,5 @@
+/* FILE: assolo_rcv.c */
 /*
- * assolo_rcv.c
  * Copyright (c) 2003 Rice University
  * All Rights Reserved.
  *
@@ -58,155 +58,112 @@
  * Author:  Dheeraj Sanghi, Department of Computer Science.
  */
 
-
 #include "assolo_rcv.h"
 
-
-/*FILE *fd_instbw;*//* file pointers for output files*/
-FILE *fd_debug;/* file pointers for debug files*/
-
-FILE *fd_tmp;/*for debugging*/
 #ifdef HAVE_SO_TIMESTAMP
-struct  msghdr msg;
-   struct  iovec iov[1];
-
-   struct cmsghdr *cmptr;
+	struct msghdr  msg;
+	struct iovec   iov[1];
+	struct cmsghdr *cmptr;
 #endif
 
-struct in_addr src_addr;
+FILE *fd_debug;	/* file pointers for debug files*/
+FILE *fd_tmp;	/* for debugging*/
+
 socklen_t fromlen=1;/*must be non-zero, used in recvfrom*/
-int debug=0;
-int jumbo=1;/*number of pkts per jumbo packet */
-u_int32_t request_num=0;/* current request number */
-u_int32_t sender_request_num=0;/* current request number */
- u_int32_t chal_no=0;
-int cc=0;
-int state=0,ack_not_rec_count=0;
-struct control_rcv2snd *pkt;/*control packet pointer*/
- char	data_snd[MAXMESG];		/* Maxm size packet */
-struct itimerval cancel_time,timeout;/* used in setitimer*/
-  struct	sockaddr_in src;	/* socket addr for outgoing packets */
-  struct	sockaddr_in dst;	/* socket addr for incoming packets */
 
-int lowcount=0,highcount=0;/*used in sending range updates */
+struct in_addr 			src_addr;
+struct itimerval 		cancel_time,timeout;	/* used in setitimer*/
+struct itimerval 		wait_time;				/* sigalrm time */
+struct sockaddr_in 		src;					/* socket addr for outgoing packets */
+struct sockaddr_in 		dst;					/* socket addr for incoming packets */
+struct control_rcv2snd	*pkt;					/* control packet pointer*/
+struct udprecord 		*udprecord;				/* log record for a packet */
+struct pkt_info 		*packet_info;			/* keeps track of packet numbers, receive time, send time*/
+struct chirprecord 		*chirp_info;
 
-int next_ok_due=0;/* used to send OK packets to sender */
-
-int created_arrays=0;
-
+int debug 			   = 0;
+int jumbo			   = 1;			/*number of pkts per jumbo packet */
+int cc				   = 0;
+int state			   = 0;
+int ack_not_rec_count  = 0;
+int lowcount		   = 0;
+int highcount		   = 0;			/*used in sending range updates */
+int next_ok_due		   = 0;			/* used to send OK packets to sender */
+int created_arrays     = 0;
+int filter			   = 0;
+int busy_period_thresh = 5;			/* parameters for excursion detection algorithm */
+int num_inst_bw		   = 11;		/* number of estimates to smooth over for mean */
+int inst_head		   = 0;			/* pointer to current location in circular buffer */
+int inst_bw_count	   = 0;			/* total number of chirps used in estimation till now*/
+int pktsize			   = 1000;
+int num_pkts_in_info   = 0;			/* how big packet_info currently is*/
+int sndPort 		   = SNDPORT;	/* destination UDP port */
+int net_option		   = 1; 		/* network option, Gbps or not */
+int remote_host_broken = 0;
+int no_chirps_recd     = 0;
+int soudp;					/*socket for udp connection */
+int pkts_per_write;			/* how many packet are expected to arrive at each write interval */
 int max_good_pkt_this_chirp;/* used in chirps affected by coalescence */
+int num_interarrival;		/* number of different interarrivals to keep track of */
+int first_chirp;
+int last_chirp;				/*keeps track of first and last chirp numbers currently in the records*/
+int chirps_per_write;		/*how many chirps will there be per write timer interrupt*/
 
-u_int32_t cur_num=0; /* current control packet number */
+u_int32_t request_num		 = 0;/* current request number */
+u_int32_t sender_request_num = 0;/* current request number */
+u_int32_t chal_no			 = 0;
+u_int32_t cur_num			 = 0; /* current control packet number */
 
+char data[MAXMESG];				/* Maxm size packet */
+char data_snd[MAXMESG];			/* Maxm size packet */
 char hostname[MAXHOSTNAMELEN];
+char localhost[MAXHOSTNAMELEN];	/*string with local host name*/
 
-char	data[MAXMESG];		/* Maxm size packet */
-struct	udprecord *udprecord;	/* log record for a packet */
-
-double total_inst_bw_excursion=0.0;/* sum of chirp estimates over the number of
-                            estimates specified */
-
-double mx_inst=0.0;
-double ls_inst=0.0;
-double den_vhf=0.0;
-double old_inst_mean=0.0;
-int filter=0;
-
-double perc_bad_chirps=0.0;/*in the last write interval how many
-                             chirps were affected by context
-                             switching*/
-double stop_time;/*time to stop experiment */
-
-/* parameters for excursion detection algorithm */
-double decrease_factor=1.5;
-int busy_period_thresh=5;
-
-
-/*context switching threshold */
-double context_receive_thresh=0.000010;/*10us*/
-
-int soudp;/*socket for udp connection */
-
-
-int pkts_per_write;/* how many packet are expected to arrive at each
-                      write interval */
-
-int num_inst_bw=11;/* number of estimates to smooth over for mean */
-
-int inst_head=0;/* pointer to current location in circular buffer */
-
-int inst_bw_count=0;/* total number of chirps used in estimation till
-                       now*/
-
-double inter_chirp_time;/*time between chirps as stated by the sender */
-
-double chirp_duration;/*transmission time of one chirp */
-
-double write_interval; /* how often to write to file */
-int pktsize=1000;
-
-/*rate range in chirp (Mbps)*/
-double low_rate=DEFAULT_MIN_RATE,high_rate=DEFAULT_MAX_RATE,avg_rate=DEFAULT_AVG_RATE;
-
-
-double soglia=DEFAULT_SGL; /*treshold*/
-
-double spread_factor=1.2; /* decrease in spread of packets within the
-                             chirp*/
-
-double *qing_delay,*qing_delay_cumsum;
-double *rates,*av_bw_per_pkt,*iat;
-
-double *inst_bw_estimates_excursion;/* pointer to interarrivals to look for */
-
-int num_interarrival;/* number of different interarrivals to keep track of */
-
-int first_chirp,last_chirp;/*keeps track of first and last chirp numbers currently in the records*/
-
-int num_pkts_in_info=0;/* how big packet_info currently is*/
-
-int sndPort = SNDPORT;	/* destination UDP port */
-
-int net_option=1; /* network option, Gbps or not */
-int chirps_per_write;/*how many chirps will there be per write timer interrupt*/
-
-
-char localhost[MAXHOSTNAMELEN];/*string with local host name*/
-
-double min_timer;/*minimum timer granularity*/
-
-struct itimerval wait_time;/* sigalrm time */
-
-struct pkt_info *packet_info;/* keeps track of packet numbers, receive
-                                time, send time*/
-
-struct chirprecord *chirp_info;
-
-int no_chirps_recd=0;
+double total_inst_bw_excursion = 0.0;				/* sum of chirp estimates over the number of estimates specified */
+double mx_inst				   = 0.0;
+double ls_inst				   = 0.0;
+double den_vhf				   = 0.0;
+double old_inst_mean		   = 0.0;
+double perc_bad_chirps		   = 0.0;				/*in the last write interval how many chirps were affected by context switching*/
+double decrease_factor		   = 1.5;				/* parameters for excursion detection algorithm */
+double context_receive_thresh  = 0.000010;			/*10us*/
+double low_rate				   = DEFAULT_MIN_RATE;	/*rate range in chirp (Mbps)*/
+double high_rate			   = DEFAULT_MAX_RATE; 	/*rate range in chirp (Mbps)*/
+double avg_rate				   = DEFAULT_AVG_RATE;	/*rate range in chirp (Mbps)*/
+double soglia				   = DEFAULT_SGL; 		/*treshold*/
+double spread_factor		   = 1.2;				/* decrease in spread of packets within the chirp*/
+double inter_chirp_time;			 /*time between chirps as stated by the sender */
+double chirp_duration;				 /*transmission time of one chirp */
+double write_interval;				 /* how often to write to file */
+double min_timer;					 /*minimum timer granularity*/
+double stop_time;					 /*time to stop experiment */
+double *inst_bw_estimates_excursion; /* pointer to interarrivals to look for */
+double *qing_delay;
+double *qing_delay_cumsum;
+double *rates;
+double *av_bw_per_pkt;
+double *iat;
 
 
 /* variables form assolo_rcv_tcp.c*/
+struct	sockaddr_in receiver;	/* Own address/port etc. */
+struct	sockaddr_in remoteaddr;	/* remote's address/port */
 
-  struct	sockaddr_in receiver;	/* Own address/port etc. */
-  struct	sockaddr_in remoteaddr;	/* remote's address/port */
-
-  int	so1;			/* socket id for incoming pkts */
-  int	rcv_size = MAXRCVBUF;	/* socket receive buffer size */
+int	so1;			/* socket id for incoming pkts */
+int	rcv_size = MAXRCVBUF;	/* socket receive buffer size */
 
   /* Extra variables. -- Suman */
   int 	new_so1;		/* Actual socket id for incoming msg */
+  int flag_on_recv;
+  int argc_val=0;
 
   char paramarray[PARAMARRAY_SIZE];
   char instbw_remote[PARAMARRAY_SIZE];
   char *params;
-
   char *argv_array[20];/*store an array of pointers to the parameters*/
-  int flag_on_recv;
 
-  int argc_val=0;
 
-int remote_host_broken=0;
-
+  /* //TODO Comment Function */
 void reset_pars()
 {
 
@@ -271,6 +228,7 @@ void reset_pars()
 }
 
 
+/* //TODO Comment Function */
 in_addr_t gethostaddr(name) char *name;
 {
 	in_addr_t addr;
@@ -300,7 +258,6 @@ void usage()
 
 
 /* close all open files and sockets */
-
 void close_all()
 {
 
@@ -326,7 +283,7 @@ void close_all()
 }
 
 
-
+/* //TODO Comment Function */
 void create_listen_socket()
 {
 
@@ -383,7 +340,6 @@ void create_listen_socket()
 
 
 /* wait for remote host to connect, get parameters from remote  */
-
 void remote_connection()
 {
 
@@ -428,7 +384,6 @@ void remote_connection()
 }
 
 /*real time*/
-
 #ifdef RT_PROCESS
   int set_real_time_priority(void)
   {
@@ -451,7 +406,6 @@ void remote_connection()
 
 
 /* main function executing all others */
-
 int main(argc,argv)int	argc; char	*argv[];
 {
   	/*create a TCP socket for listening */
