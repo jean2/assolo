@@ -76,7 +76,7 @@ struct	sockaddr_in dst;	/* destination internet address, one is for the valid de
 
 u_int32_t request_num;
 int num_interarrival;/* number of packets in a chirp minus one */
-int fromlen=1;/*must be non-zero, used in recvfrom*/
+socklen_t fromlen=1;/*must be non-zero, used in recvfrom*/
 int debug=0;
 double inter_chirp_time;
 int connected=0;/*0=not connected, 1 = connected*/
@@ -338,7 +338,7 @@ int compute_parameters()
 
   	chirp_duration=0;
 
-   	thr=0.05*((high_rate-low_rate)/2);
+   	thr=soglia*((high_rate-low_rate)/2);
 
    	k=0;
 
@@ -700,7 +700,7 @@ int main(argc, argv)
 {
    /* allocate space for local timestamp */
    	tp = (struct timeval *)(malloc (sizeof (struct timeval)));
-   	fromlen=(int)sizeof(struct sockaddr);
+   	fromlen=(socklen_t)sizeof(struct sockaddr);
 
   	lockMe();
 

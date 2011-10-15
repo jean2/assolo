@@ -11,8 +11,10 @@ void write_instant_bw(double inst_av_bw_excursion,double time_stamp, int nc)
   	/*  double inst_median=0.0;*/
   	double inst_mean=0.0;
 
-  	double alfa=0.0;
-  	int g;
+	#ifdef VHF
+  		double alfa=0.0;
+  		int g;
+	#endif
 
   	struct inst_bw_pkt *remote_pkt;
 
@@ -363,7 +365,24 @@ int check_for_new_pars()
 {
   	int resetflag=0;
 
-  	if (lowcount>2)
+  	// TODO Bugged Code for automated adjustment of Upper- and LowerBorder
+  	// This Code is bugged. It will force the high rate to update and then produce constant estimates since the factor of the adjustment seems to be to great. (Tested on 10Mbit Link)
+  	// Example: L=1.0 H=14.0 after automated adjustment it was L=2.0 H=98.0
+  	//
+  	// Execute this on an 10Mbit link to "possibly" reproduce the bug:
+  	// ./assolo_run -S [IP] -R [IP] -t 60 -p 450 -l 1 -u 14 -D
+    //
+  	// If you use assolo 0.9a then you will encounter a problem. If the Upper and LowerBorder is adjusted automatically
+  	// the Upper Border will be divided by the factor 10.000. This will cause LowerBorder > UpperBorder => very bad ;)
+  	// 		Someone forgot about the 10.000 Factor which is used in computation of the Reach Stream (Receiver Code)
+  	//
+  	// The automated adjustment is deactivated in this codeversion
+  	// To activate it again you have to replace the two "if(0)" below and
+  	// uncommented the two statements in "signal_alrm_rcv.c"  Line 82 + 84 (Bugfix)
+  	//
+  	// Sebastian.Wilken@uni-duesseldorf.de 04.04.2011
+
+  	if(0) //(lowcount>2)
     {
 
       	if (low_rate<=1.0) /*less than 1Mbps, have smaller range of rates, that is fewer packets per chirp. This allows us to send more chirps per unit time.*/
@@ -381,7 +400,7 @@ int check_for_new_pars()
       	lowcount=0;
     }
 
-  	if (highcount>2 && high_rate<0.9*(double)MAX_HIGH_RATE)
+  	if(0) //(highcount>2 && high_rate<0.9*(double)MAX_HIGH_RATE)
     {
 
       	if (high_rate>1.0)

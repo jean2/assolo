@@ -582,8 +582,8 @@ void compute_parameters()
 
       	fprintf(stderr,"chirps_per_write=%d, pkts_per_write=%d\n",chirps_per_write,pkts_per_write);
 
-      	realloc(packet_info,pkts_per_write*2*sizeof(struct pkt_info));
-      	realloc(chirp_info,chirps_per_write*2*sizeof(struct chirprecord));
+      	packet_info=realloc(packet_info,pkts_per_write*2*sizeof(struct pkt_info));
+      	chirp_info=realloc(chirp_info,chirps_per_write*2*sizeof(struct chirprecord));
     }
 
   	return;

@@ -58,7 +58,7 @@
 #define	UPDATE_RATES 3
 #define CHIRPS_STARTED 4
 #define RECV_OK 5
-#define VERSION "2.4.1"
+#define VERSION "0.9b"
 
 #ifndef HAVE_U_INT32_T
 typedef unsigned int u_int32_t;

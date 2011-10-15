@@ -48,7 +48,7 @@ extern   struct cmsghdr *cmptr;
 
 
 extern struct in_addr src_addr;
-extern int fromlen;
+extern socklen_t fromlen;
 extern int debug;
 
 

@@ -74,7 +74,7 @@ struct  msghdr msg;
 #endif
 
 struct in_addr src_addr;
-int fromlen=1;/*must be non-zero, used in recvfrom*/
+socklen_t fromlen=1;/*must be non-zero, used in recvfrom*/
 int debug=0;
 int jumbo=1;/*number of pkts per jumbo packet */
 u_int32_t request_num=0;/* current request number */
