@@ -53,47 +53,73 @@ u_int32_t hash(u_int32_t crc, u_int32_t element)
 
 }
 
-/* given a rcv2snd control packet compute the checksum*/
-u_int32_t gen_crc_rcv2snd(struct control_rcv2snd *pkt)
+
+/* Split the 64 Bit into 2x 32Bit to generate the crc for each elememt and return it*/
+// TODO Double values representation and sizeof can change on different system...
+u_int32_t gen_crc_double(double value, u_int32_t crc)
 {
-  	u_int32_t cur_element,crc;
+  	u_int32_t 	   Split00_15 = 0;	// for double values (64Bit) we need 32Bit for our crc => splitting
+  	u_int32_t 	   Split16_32 = 0;	// ...
+  	unsigned char *HelperArray;		// Just a pointer for easy access of raw data, since double "should" be 8 byte we got 0-7 array elements
 
-  	crc=ntohl(pkt->request_type);
-  	cur_element=ntohl(pkt->request_num);
-  	crc=hash(crc,cur_element);
+  	HelperArray = (unsigned char *) &(value);	// Assign the MemoryAdress of the double value to a pointer (HelperArray) so we can access it as an array ...
 
-  	cur_element=ntohl(pkt->num);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->timesec);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->timeusec);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->chal_no);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->num_interarrival);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->inter_chirp_time);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->low_rate);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->high_rate);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->soglia);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->filter);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->spread_factor);
-  	crc=hash(crc,cur_element);
-  	cur_element=ntohl(pkt->pktsize);
-  	crc=hash(crc,cur_element);
+  	// Build lower 32 bits (Array 4-7 !)
+  	Split00_15 = (u_int32_t) HelperArray[4];				// f.e. HelperArray 11 22 33 44 55 66 77 88 => Lower part 55 66 77 88
+  	Split00_15 = Split00_15 << 1;							// Split00_15 = 00 00 55 00
+  	Split00_15 = Split00_15 + (u_int32_t) HelperArray[5];	// Split00_15 = 00 00 55 66
+  	Split00_15 = Split00_15 << 1;							// Split00_15 = 00 55 66 00
+	Split00_15 = Split00_15 + (u_int32_t) HelperArray[6];	// Split00_15 = 00 55 66 77
+	Split00_15 = Split00_15 << 1;							// Split00_15 = 55 66 77 00
+	Split00_15 = Split00_15 + (u_int32_t) HelperArray[7];	// Split00_15 = 55 66 77 88 done :=)
+
+	// Build higher 32 bits (Array 0-3 !)
+	Split16_32 = (u_int32_t) HelperArray[0];				// Do the same for the higher part
+	Split16_32 = Split16_32 << 1;
+	Split16_32 = Split16_32 + (u_int32_t) HelperArray[1];
+	Split16_32 = Split16_32 << 1;
+	Split16_32 = Split16_32 + (u_int32_t) HelperArray[2];
+	Split16_32 = Split16_32 << 1;
+	Split16_32 = Split16_32 + (u_int32_t) HelperArray[3];
+
+  	crc = hash(crc, ntohl(Split00_15));		// Be sure they are in HostOrder before CRC (Little Endian vs Big Endian)
+  	crc = hash(crc, ntohl(Split16_32));		// CRC should be the same on Little and BigEndian System after networktransmit
 
   	return(crc);
 }
 
 
+/* given a rcv2snd control packet compute the checksum*/
+u_int32_t gen_crc_rcv2snd(struct control_rcv2snd *pkt)
+{
+  	u_int32_t crc;
+
+  	// Integer values - calculate ...
+  	crc = ntohl(pkt->request_type);					// Starting value for crc, use ntohl to be sure the Endian is correct for each system.
+  	crc = hash(crc, ntohl(pkt->request_num));		// CRC should be the same after the information traveled over the network
+  	crc = hash(crc, ntohl(pkt->num) );
+  	crc  =hash(crc, ntohl(pkt->timesec));
+  	crc = hash(crc, ntohl(pkt->timeusec));
+  	crc = hash(crc, ntohl(pkt->chal_no));
+    crc = hash(crc, ntohl(pkt->num_interarrival));
+  	crc = hash(crc, ntohl(pkt->filter));
+  	crc = hash(crc, ntohl(pkt->pktsize));
+
+  	// Double values - split the 64bit double into 2x 32 Bit and build the crc over each element
+  	// TODO Double values representation and sizeof can change on different system...
+  	crc = gen_crc_double(pkt->spread_factor, crc);
+  	crc = gen_crc_double(pkt->soglia, crc);
+  	crc = gen_crc_double(pkt->low_rate, crc);
+  	crc = gen_crc_double(pkt->high_rate, crc);
+  	crc = gen_crc_double(pkt->inter_chirp_time, crc);
+
+  	return(crc);
+}
+
+
+/* Check if CRC is correct */
 int check_crc_rcv2snd(struct control_rcv2snd *pkt)
 {
-
   	u_int32_t crc;
 
   	crc=gen_crc_rcv2snd(pkt);
@@ -105,31 +131,21 @@ int check_crc_rcv2snd(struct control_rcv2snd *pkt)
 }
 
 /* given a snd2rcv packet compute the checksum*/
-
 u_int32_t gen_crc_snd2rcv(struct udprecord *pkt)
 {
-  	u_int32_t cur_element,crc;
+  	u_int32_t crc;
 
-  	crc=ntohl(pkt->num);
-
-  	cur_element=ntohl(pkt->request_num);
-  	crc=hash(crc,cur_element);
-
-  	cur_element=ntohl(pkt->chirp_num);
-  	crc=hash(crc,cur_element);
-
-  	cur_element=ntohl(pkt->timesec);
-  	crc=hash(crc,cur_element);
-
-  	cur_element=ntohl(pkt->timeusec);
-  	crc=hash(crc,cur_element);
-
-  	cur_element=ntohl(pkt->chal_no);
-  	crc=hash(crc,cur_element);
+  	crc = ntohl(pkt->num);						// Starting value for crc, use ntohl to be sure the Endian is correct for each system.
+  	crc = hash(crc,ntohl(pkt->request_num));	// CRC should be the same after the information traveled over the network
+  	crc = hash(crc,ntohl(pkt->chirp_num));
+  	crc = hash(crc,ntohl(pkt->timesec));
+  	crc = hash(crc,ntohl(pkt->timeusec));
+  	crc = hash(crc,ntohl(pkt->chal_no));
 
   	return(crc);
 }
 
+/* Check if CRC is correct */
 int check_crc_snd2rcv(struct udprecord *pkt)
 {
 

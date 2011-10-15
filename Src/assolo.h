@@ -58,7 +58,7 @@
 #define	UPDATE_RATES 3
 #define CHIRPS_STARTED 4
 #define RECV_OK 5
-#define VERSION "0.9b"
+#define VERSION "0.9c"
 
 #ifndef HAVE_U_INT32_T
 typedef unsigned int u_int32_t;
@@ -87,19 +87,20 @@ struct control_rcv2snd {
   u_int32_t  chal_no;
   /* following used only in update */
   u_int32_t num_interarrival; /*one less than the number of packets per chirp*/
-  u_int32_t inter_chirp_time;/* time between chirps */
-  u_int32_t low_rate;/* lowest rate (Mbps) to probe at */
 
   //modifica
-  u_int32_t high_rate;/* highest rate (Mbps) to probe at */
-  u_int32_t soglia;/* highest rate (Mbps) to probe at */  
-  u_int32_t filter;/* highest rate (Mbps) to probe at */  
+  u_int32_t filter;		/* highest rate (Mbps) to probe at */
+  u_int32_t pktsize;	/* pkt size in bytes used for probing */
+  u_int32_t jumbo;		/* number of back to back packets to transmit instead of one chirp packet */
+  u_int32_t  checksum;	/*check sum for security*/
 
-  u_int32_t spread_factor; /* decrease in spread of packets within the chirp */
-  u_int32_t pktsize;/* pkt size in bytes used for probing */
-  u_int32_t jumbo;/* number of back to back packets to transmit instead of one chirp packet */
-  u_int32_t  checksum;/*check sum for security*/
-
+  // Double values ....
+  // TODO Double values representation and sizeof can change on different system...
+  double high_rate;			/* highest rate (Mbps) to probe at */
+  double inter_chirp_time;	/* time between chirps */
+  double low_rate;			/* lowest rate (Mbps) to probe at */
+  double soglia;			/* Threshold Percentage */
+  double spread_factor; 	/* decrease in spread of packets within the chirp */
 };
 
 

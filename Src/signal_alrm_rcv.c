@@ -79,7 +79,11 @@ void sig_alrm(int signo)
       	{
 			if (check_for_new_pars())
 		  	{
-	    		send_pkt(UPDATE_RATES);
+				// TODO Bugged Code for automated adjustment of Upper- and LowerBorder
+				//high_rate=high_rate*10000;	// Hotfix: Needed for automatic adjustment of the upper and lower border.
+	    		send_pkt(UPDATE_RATES);		// Uncomment only if you know what you doing
+	    		//high_rate=high_rate/10000;	// Details in "compute_bw_contextsw_rcv.c" Line 368
+
 	    		request_num++;
 	  		}
       	}

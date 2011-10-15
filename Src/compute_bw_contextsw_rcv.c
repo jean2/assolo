@@ -155,7 +155,7 @@ double compute_inst_bw_excursion()
     	cur_inc++;
 
   	if(debug)
-  		printf("First increasing pkt: %d\n", cur_inc);
+  		fprintf(stderr,"First increasing pkt: %d\n", cur_inc);
 
   	cur_loc=cur_inc+1;
 

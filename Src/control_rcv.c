@@ -1,11 +1,38 @@
 #include "assolo_rcv.h"
 
+double htonll(double input)
+{
+    // Test if Big or LittleEndian
+    short int word = 0x0001;			// Works this way: word 16 byte char 8 byte
+    char     *byte = (char *) &word;	// shortened => (0000) 0001 ... If BE => (0001) 0000 = 0 | if LE => (0000) 0001 = 1
+
+    if(byte[0] == 1) // Little Endian - swap bits
+    {// TODO Double values representation and sizeof can change on different system...
+    	double output 	   = 0.0;
+    	unsigned char *src = (unsigned char *)&input;
+        unsigned char *dst = (unsigned char *)&output;
+
+        dst[0] = src[7];
+    	dst[1] = src[6];
+    	dst[2] = src[5];
+    	dst[3] = src[4];
+    	dst[4] = src[3];
+    	dst[5] = src[2];
+    	dst[6] = src[1];
+    	dst[7] = src[0];
+
+    	return(output);
+    }
+    else // Big Endian - nothing to do here
+    {
+    	return(input);
+    }
+}
 
 /* send control packet to sender*/
 void send_pkt(int state)
 {
   	struct timeval tp_snd;
-  	double tmp_var;/* variable used in creating control packet*/
 
   	(void) gettimeofday (&tp_snd, (struct timezone *) 0);
 
@@ -32,28 +59,25 @@ void send_pkt(int state)
       		pkt->chal_no=htonl((u_int32_t)chal_no);
       	break;
     	case UPDATE_RATES:
+    		// Send always in network byte order (Big Endian) over the networklink
 
-      		pkt->request_type=htonl((u_int32_t)UPDATE_RATES);
-      		tmp_var=1000000.0*inter_chirp_time;
-      		if(debug) fprintf(stderr,"update rates, inter_chirp=%f microsecs \n",tmp_var);
+    		// Integer Values - use ntonl/htonl to adjust byteorder (Little-/BigEndian) for network transmission
+    		pkt->request_type	  = htonl( (u_int32_t) UPDATE_RATES);
+			pkt->filter			  = htonl( (u_int32_t) filter);
+			pkt->jumbo			  = htonl( (u_int32_t) jumbo);
+			pkt->num_interarrival = htonl( (u_int32_t) num_interarrival);
+			pkt->pktsize		  = htonl( (u_int32_t) pktsize);
 
-      		pkt->inter_chirp_time=htonl ((u_int32_t) tmp_var);/* in us*/
-      		tmp_var=low_rate*10000.0;
-      		pkt->low_rate=htonl ((u_int32_t)tmp_var);
-      		pkt->num_interarrival=htonl ((u_int32_t)num_interarrival);
+			// Double values - use own htonll function (defined in this file)
+			// TODO Double values representation and sizeof can change on different system...
+			pkt->high_rate		  = htonll(high_rate);
+			pkt->inter_chirp_time = htonll(inter_chirp_time);
+			pkt->low_rate		  = htonll(low_rate);
+			pkt->soglia			  = htonll(soglia);
+			pkt->spread_factor	  = htonll(spread_factor);
 
+			fprintf(stderr,"\nHR: %f\tIC: %f\tLR: %f\tT: %f\tSF: %f\n", high_rate,inter_chirp_time,low_rate,soglia,spread_factor);
 
-      		tmp_var=high_rate*10000.0;
-      		pkt->high_rate=htonl ((u_int32_t)high_rate);
-
-
-		    pkt->soglia=htonl ((u_int32_t)soglia);
-      		pkt->filter=htonl ((u_int32_t)filter);
-
-      		tmp_var=spread_factor*10000.0;
-      		pkt->spread_factor=htonl ((u_int32_t) tmp_var);
-      		pkt->pktsize=htonl ((u_int32_t) pktsize);
-      		pkt->jumbo=htonl ((u_int32_t) jumbo);
       	break;
     	case STOP:
     		pkt->request_type=htonl((u_int32_t)STOP);
@@ -188,7 +212,7 @@ void initiate_connection()
   	int	rcv_size = MAXRCVBUF;	/* socket receive buffer size */
 
  	int flag_on_recv;/*flag for setting SO_REUSEADDR*/
- 	double tmp_var=0;/* variable used to create message to sender  */
+
 
   	/* create a socket to receive/send UDP packets */
   	soudp = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -246,26 +270,24 @@ void initiate_connection()
  	bzero((char *)pkt,sizeof(struct control_rcv2snd));
   	request_num=0;
  	cur_num=(u_int32_t)(rand()/2);/*initial packet number is random*/
- 	pkt->num_interarrival=htonl((u_int32_t)num_interarrival);
 
- 	tmp_var=inter_chirp_time*1000000.0;
- 	pkt->inter_chirp_time=htonl ((u_int32_t) tmp_var);/* in us*/
- 	tmp_var=low_rate*10000.0;
- 	pkt->low_rate=htonl ((u_int32_t) tmp_var);
- 	tmp_var=high_rate*10000.0;
+ 	// Send always in network byte order (Big Endian) over the networklink
 
+ 	// Integer Values - use ntonl/htonl to adjust byteorder (Little-/BigEndian) for network transmission
+	pkt->filter			  = htonl( (u_int32_t) filter);
+	pkt->jumbo			  = htonl( (u_int32_t) jumbo);
+	pkt->num_interarrival = htonl( (u_int32_t) num_interarrival);
+	pkt->pktsize		  = htonl( (u_int32_t) pktsize);
 
- 	pkt->high_rate=htonl ((u_int32_t) tmp_var);
- 	pkt->soglia=htonl ((u_int32_t) soglia);
- 	pkt->filter=htonl ((u_int32_t)filter);
-
- 	pkt->num_interarrival=htonl ((u_int32_t) num_interarrival);
- 	pkt->spread_factor=htonl ((u_int32_t) (spread_factor*10000.0));
- 	pkt->pktsize=htonl ((u_int32_t ) pktsize);
- 	pkt->jumbo=htonl ((u_int32_t ) jumbo);
+	// Double values - use own htonll function (defined in this file)
+	// TODO Double values representation and sizeof can change on different system...
+	pkt->high_rate		  = htonll(high_rate);
+	pkt->inter_chirp_time = htonll(inter_chirp_time);
+	pkt->low_rate		  = htonll(low_rate);
+	pkt->soglia			  = htonll(soglia);
+	pkt->spread_factor	  = htonll(spread_factor);
 
 	/* request connection */
-
    	state=REQ_CONN;
    	send_pkt(state);
 

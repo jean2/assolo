@@ -116,6 +116,34 @@ struct	udprecord *sendpkt;	/* udp packet content */
 
 struct control_rcv2snd *rcvpkt;
 
+double ntohll(double input)
+{
+    // Test if Big or LittleEndian
+    short int word = 0x0001;			// Works this way: word 16 byte char 8 byte
+    char     *byte = (char *) &word;	// shortened => (0000) 0001 ... If BE => (0001) 0000 = 0 | if LE => (0000) 0001 = 1
+
+    if(byte[0] == 1) // Little Endian - swap bits
+    {// TODO Double values representation and sizeof can change on different system...
+    	double output 	   = 0.0;
+    	unsigned char *src = (unsigned char *)&input;
+        unsigned char *dst = (unsigned char *)&output;
+
+        dst[0] = src[7];
+    	dst[1] = src[6];
+    	dst[2] = src[5];
+    	dst[3] = src[4];
+    	dst[4] = src[3];
+    	dst[5] = src[2];
+    	dst[6] = src[1];
+    	dst[7] = src[0];
+
+    	return(output);
+    }
+    else // Big Endian - nothing to do here
+    {
+    	return(input);
+    }
+}
 
 /* Usage information */
 
@@ -308,26 +336,30 @@ int compute_parameters()
 {
   	int count;
   	int pars_ok=1;
-
-
-
   	int k;
+
   	double thr;
 
-  	/* get data from packet */
+  	// Received Data always in network byte order (Big Endian)
 
-  	inter_chirp_time=(double)(ntohl (rcvpkt->inter_chirp_time));/* in us*/
-  	low_rate=(double)(ntohl (rcvpkt->low_rate))/10000.0;
+  	// get data from packet
+  	// Integer Values - use ntonl/htonl to adjust byteorder (Little-/BigEndian) for network transmission
+  	jumbo			 = (int) ntohl(rcvpkt->jumbo);
+  	num_interarrival = (int) ntohl(rcvpkt->num_interarrival);
+  	pktsize			 = (int) ntohl(rcvpkt->pktsize);
+  	request_num		 = (int) ntohl(rcvpkt->request_num);
 
+	// Double values - use own ntohll function (defined in this file)
+    // TODO Double values representation and sizeof can change on different system...
+	high_rate 		 = ntohll(rcvpkt->high_rate);
+	inter_chirp_time = ntohll(rcvpkt->inter_chirp_time);
+	low_rate		 = ntohll(rcvpkt->low_rate);
+	soglia			 = ntohll(rcvpkt->soglia);
+	spread_factor	 = ntohll(rcvpkt->spread_factor);
 
-  	high_rate=(double)(ntohl (rcvpkt->high_rate))/10000.0;
-  	soglia=(double)(ntohl (rcvpkt->soglia))/100;
-
-  	spread_factor=(double)(ntohl (rcvpkt->spread_factor))/10000.0;
-  	pktsize=(int) ntohl (rcvpkt->pktsize);
-  	request_num=(int) ntohl (rcvpkt->request_num);
-  	jumbo=ntohl (rcvpkt->jumbo);
-  	num_interarrival=(int) ntohl (rcvpkt->num_interarrival);
+  	// Adjust received values for computing
+  	inter_chirp_time = inter_chirp_time * 1000000.0; 	//TODO inter_chirp Adjustment for ... ???
+  	soglia			 = soglia / 100.0;					// f.e 5% to 0.05 for Threshold calculation
 
   	if(debug)
   		fprintf(stderr,"ict=%f,low=%f,sf=%f,psize=%d,rqnum=%d,numiat=%d\n",inter_chirp_time,low_rate,spread_factor,pktsize,request_num,num_interarrival);
@@ -357,7 +389,6 @@ int compute_parameters()
 
    	for (count=0;count<num_interarrival;count++)
    	{
-
    		iat_snd[count]=8*((double)pktsize)/rates_snd[count];
 		chirp_duration+=iat_snd[count];
    	}
@@ -370,9 +401,9 @@ int compute_parameters()
    	if(debug)
    		fprintf(stderr,"largest %f\n",largest_inter_arrival);
 
-  	gap = inter_chirp_time - chirp_duration;
+   	gap = inter_chirp_time - chirp_duration;
 
-  	if (gap<=0)
+  	if (gap<=0.0)
     	pars_ok=0;
 
   	return(pars_ok);
