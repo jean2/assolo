@@ -177,7 +177,7 @@ void usage()
    	(void) fprintf (stderr, "\t -l \t lowest rate (Mbps) to probe at within chirp, default=%fMbps. NOTE: by default assolo will find an appropriate probing range.\n",DEFAULT_MIN_RATE);
    	(void) fprintf (stderr, "\t -u \t highest rate (Mbps) to probe at within chirp, default=%fMbps\n",DEFAULT_MAX_RATE);
    	(void) fprintf (stderr, "\t -e \t treshold , default=%fpercent\n",DEFAULT_SGL);
-   	(void) fprintf (stderr, "\t -e \t filter , default=%d type\n",0);
+   	(void) fprintf (stderr, "\t -f \t filter , default=%d type\n",0);
    	(void) fprintf (stderr, "\t -p \t packet size <%d-%d>,default=1000 bytes\n",MINPKTSIZE,MAXMESG);
    	(void) fprintf (stderr, "\t -t \t duration of experiment(sec), default=600 sec \n");
    	(void) fprintf (stderr, "\t -s \t spread factor: ratio of consecutive inter-arrivals within a chirp, default=1.2 \n");

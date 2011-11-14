@@ -587,5 +587,9 @@ void compute_parameters()
       	chirp_info=realloc(chirp_info,chirps_per_write*2*sizeof(struct chirprecord));
     }
 
+  	/* free allocated memory */
+  	free(rates_here);
+  	free(iat_here);
+
   	return;
 }

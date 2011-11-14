@@ -142,7 +142,7 @@ void run_select(unsigned long time)
   	if(debug) fprintf(stderr,"running select\n");
   	maxfd=soudp+1;
 
-  	select(maxfd,&rset,NULL,NULL,&tp_select);
+  	select(maxfd,&rset,NULL,NULL,&tp_select); // TODO no use for the returnvalue ?
 
   	if (FD_ISSET(soudp,&rset))
    	{

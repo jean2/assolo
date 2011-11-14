@@ -1,0 +1,15 @@
+set size 1.0,1.0
+set origin 0.0,0.0
+set multiplot
+	set size 1.0,0.6
+	set origin 0.0,0.0
+	set title '|Last Estimate - Actual Estimate|'
+	set xlabel 'Time (s)'
+	set ylabel 'Bandwidth Difference (%)'
+plot './example.instbw.data' using 1:5 w fsteps notitle lt 1
+	set size 1.0,0.4
+	set origin 0.0,0.6
+	set title 'Bandwidth Estimation'
+	set ylabel 'Bandwith (mbps)'
+plot './example.instbw.data' using 1:2 w l notitle lt 3 lw 2
+unset multiplot

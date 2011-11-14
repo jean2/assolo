@@ -40,8 +40,9 @@ void receive_chirp_pkts()
   	double good_pkt_rcv_time=0.0;/* non-coalesced receiver time stamp */
   	double good_pkt_snd_time=0.0;/* non-coalesced sender time stamp */
 
-  	u_int32_t	np,nc,good_pkt_num=-1,good_chirp_num=-1;			/* packet, chirp number received */
+  	u_int32_t np,nc,good_pkt_num=-1,good_chirp_num=-1;			/* packet, chirp number received */
   	u_int32_t prev_chirp=0,prev_pkt_num=0,prev_pkt_chirp=0;/* previous chirp number */
+  	u_int32_t cc_is_empty=0;	/* Needed to avoid an "double free or corruption" error with 'free(tp)' if cc < 0 */
 
   	struct timeval *tp;		/* timestamp */
 
@@ -113,7 +114,9 @@ void receive_chirp_pkts()
 
     	if (cc < 0)
     	{
-	 		perror ("assolo_rcv: read");
+	 		perror("assolo_rcv: read");
+	 		cc_is_empty=1;
+	 		
 	 		break;
      	}
 
@@ -247,8 +250,13 @@ void receive_chirp_pkts()
 
   	}/*end of while*/
 
-  	/* freeing the timestamp pointer*/
-  	free(tp);
+  	/* If cc < 0 then malloc(tp) will never happen => "double free or corruption" error */
+  	if(cc_is_empty == 0)
+  	{
+		/* freeing the timestamp pointer*/
+		free(tp);
+	}
+
 
 }
 

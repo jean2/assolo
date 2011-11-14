@@ -37,14 +37,7 @@ void open_dump_files(char *src,char *dst)
   	strcat(debug_file_name,".debug");
 
 
-  	/*  fd_instbw = fopen(instbw_file_name, "w");
-  	if (fd_instbw == NULL)
-  	{
-    	fprintf(stderr, "Error opening dump file\n");
-  	}
 
-  	fprintf(stderr, "Opening file: %s\n",instbw_file_name);
-  	*/
   	if(debug)
     {
       	fd_debug = fopen(debug_file_name, "w");

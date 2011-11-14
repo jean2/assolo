@@ -66,8 +66,22 @@
 	struct cmsghdr *cmptr;
 #endif
 
-FILE *fd_debug;	/* file pointers for debug files*/
-FILE *fd_tmp;	/* for debugging*/
+FILE *fd_debug;	/* file pointer for debug file */
+//TODO Maybe bugged ? Check if needed and if runner and receiver use it. Only if Debug mode is ON valgrind remarks
+// This file Line 291
+/*
+==32320== Invalid free() / delete / delete[]
+==32320==    at 0x4024B3A: free (vg_replace_malloc.c:366)
+==32320==    by 0x40C2AA9: fclose@@GLIBC_2.1 (iofclose.c:88)
+==32320==    by 0x8049421: main (assolo_rcv.c:276)
+==32320==  Address 0x41c4a88 is 0 bytes inside a block of size 352 free'd
+==32320==    at 0x4024B3A: free (vg_replace_malloc.c:366)
+==32320==    by 0x40C2AA9: fclose@@GLIBC_2.1 (iofclose.c:88)
+==32320==    by 0x804918C: close_all (assolo_rcv.c:276)
+==32320==    by 0x804C46D: sig_alrm (signal_alrm_rcv.c:97)
+==32320==    by 0x40916E7: ??? (in /lib/tls/i686/cmov/libc-2.11.1.so)
+==32320==    by 0x80495DE: main (assolo_rcv.c:454)
+*/
 
 socklen_t fromlen=1;/*must be non-zero, used in recvfrom*/
 
@@ -269,15 +283,13 @@ void close_all()
    	(void) close (soudp);
    	(void) close (new_so1);
 
-   	/*
-	fflush(fd_instbw);
-	fclose(fd_instbw);
-   */
-
    	if (debug)
     {
-       	fflush(fd_debug);
-       	fclose(fd_debug);
+   		if(fd_debug!=NULL)
+   		{
+   			fflush(fd_debug);
+   			fclose(fd_debug);
+   		}
     }
 
 }
@@ -367,7 +379,6 @@ void remote_connection()
     }
 
     /* split received parameters into array of strings  */
-
     params=strtok(paramarray,":");
 
     argc_val=0;

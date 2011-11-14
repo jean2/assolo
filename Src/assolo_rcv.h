@@ -49,7 +49,7 @@ extern   struct cmsghdr *cmptr;
 #define PARAMARRAY_SIZE 300			/* Max Length of Parameter string */
 
 
-extern FILE *fd_debug;				/* file pointers for debug files*/
+extern FILE *fd_debug;				/* file pointer for debug file*/
 
 extern struct control_rcv2snd *pkt;					/* control packet pointer*/
 extern struct udprecord 	  *udprecord;			/* log record for a packet */

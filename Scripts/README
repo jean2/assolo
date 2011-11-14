@@ -1,0 +1,48 @@
+---------------------------------------
+- Assolo Helper Scripts - version 1.0 -
+---------------------------------------
+Be sure g++ is installed. Compile the tools with "./Setup compile"
+
+This is a extended set of scripts to create and analyze data created by assolo.
+For basic help try "./HelperAssolo.sh" 
+
+
+Please read the "./HelperAssolo.sh Info/Help" section before working with this scripts. 
+This will help you understand the scripts faster. You can find there some background information.
+
+For a nearly full automated experiment of seven assolo parameters use "./SanityCheck_Parameters.sh"
+More details will be presented when you excute the scripts.
+
+The assolo binaries have to be placed in "../Scripts" for SanityCheck_Parameters.sh
+
+Requirements:
+- /bin/bash
+- Assolo >= 0.9a
+- build-essentials for linux (g++)
+- awk
+- gnuplot
+- apcalc
+
+Included files
+ - HelperAssolo.sh           	Basic Script to handle raw assolo output.
+ - SanityCheck_Parameters.sh    Script for automated Experiments with assolo
+ - Setup.sh                 	File to setup the tools and general Information
+ - C-Code
+   - Debugizer.c            		C++ Tool to parse Assolo Debug Files
+   - Instbwizer.c               	C++ Tool to parse Assolo Instbw Files
+   - Statizer.c                 	C++ Tool to parse generated *.debug.data and *.instbw.data Files
+ - ExampleFiles                 
+   - example.debug
+   - example.debug.data
+   - example.debug.data.plot
+   - example.instbw
+   - example.instbw.data
+   - example.instbw.data.difference_plot
+   - example.instbw.data.plot
+   - summary_bandwidthestimation.data
+   - summary_bandwidthestimation.plot
+ - README                     	 
+ - COPYING                   	GPL v3
+
+Licensed under "GNU GENERAL PUBLIC LICENSE Version 3"
+Sebastian.Wilken@uni-duesseldorf.de - Base Release 1.0 - 15.10.2011
