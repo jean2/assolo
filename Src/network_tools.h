@@ -2,7 +2,11 @@
 #ifndef _network_tools_
 #define _network_tools_	1
 
+	#include "../config.h"
 	#include <stdint.h>
+	#include <sys/types.h>
+	#include <netinet/in.h>
+	#include <stdio.h>
 	#include "assolo.h"
 
 	#define pack754_32(f) (pack754((f), 32, 8))

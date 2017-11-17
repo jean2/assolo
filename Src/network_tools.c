@@ -1,9 +1,6 @@
 /* FILE: network_tools.c */
 
 #include "network_tools.h"
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <stdio.h>
 
 
 /* Check if the System uses Little Endian or Big Endian
