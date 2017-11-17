@@ -47,7 +47,7 @@ extern   struct cmsghdr *cmptr;
 
 
 #define RTTUSEC		1000000 	/* assuming RTT is 1000 millisec */
-#define PARAMARRAY_SIZE 300		/* Max Length of Parameter string */
+#define ARGVARRAY_MAX	50		/* Max numberof parameter */
 
 
 extern FILE *fd_debug;			/* file pointer for debug file*/
@@ -101,7 +101,7 @@ extern char data_snd[MAXMESG];		/* Max size packet */
 extern char hostname[MAXHOSTNAMELEN];
 extern char	data[MAXMESG];		/* size packet */
 extern char localhost[MAXHOSTNAMELEN];	/* string with local host name*/
-extern char instbw_remote[PARAMARRAY_SIZE];
+extern char instbw_remote[PARAMSTRING_MAX];
 
 extern double total_inst_bw_excursion;	/* sum of chirp estimates over the number of estimates specified */
 extern double mx_inst;

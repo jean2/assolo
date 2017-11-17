@@ -172,10 +172,10 @@ int 	new_so1;		/* Actual socket id for incoming msg */
 int	flag_on_recv;
 int	argc_val=0;
 
-char paramarray[PARAMARRAY_SIZE];
-char instbw_remote[PARAMARRAY_SIZE];
+char paramstring[PARAMSTRING_MAX];
+char instbw_remote[PARAMSTRING_MAX];
 char *params;
-char *argv_array[20];	/* store an array of pointers to the parameters */
+char *argv_array[ARGVARRAY_MAX];	/* Array of pointers to the parameters*/
 
 
 /* //TODO Comment Function */
@@ -371,23 +371,30 @@ void remote_connection()
       perror("assolo_rcv_tcp: TCP_NODELAY_options");
     }
 
-  if (read(new_so1, paramarray, PARAMARRAY_SIZE) == 0)
+  if (read(new_so1, paramstring, PARAMSTRING_MAX) == 0)
     {
       perror("assolo_rcv_tcp: read error");
       remote_host_broken = 1;
       return;
     }
+  paramstring[PARAMSTRING_MAX - 1] = '\0';
 
   /* split received parameters into array of strings  */
-  params = strtok(paramarray, ":");
+  params = strtok(paramstring, ":");
 
   argc_val = 0;
   /* setup argc_val and argv_array  */
-  while(params != NULL)
+  while ((params != NULL) && (argc_val < ARGVARRAY_MAX))
     {
       argv_array[argc_val] = params;	/*store location in array*/
       argc_val++;
       params = strtok(NULL, ":");
+    }
+  if (argc_val == ARGVARRAY_MAX)
+    {
+      fprintf(stderr, "assolo_rcv_tcp: too many parameters\n");
+      remote_host_broken = 1;
+      return;
     }
 
   argv_array[argc_val] = params;/*store location in array*/

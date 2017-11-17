@@ -685,8 +685,14 @@ void connect_to_rcv(int argc, char *argv_ptr[])
       strcat(data_snd, *argv_ptr);
       num_args++;
     }
+  //fprintf(stderr, "len %d num %d\n", strlen(data_snd), num_args);
+  if ((strlen(data_snd) + 1) > PARAMSTRING_MAX)
+    {
+      fprintf(stderr, "assolo_run: too many arguments\n");
+      exit (1);
+    }	    
 
-  if (write(sotcp, data_snd, 100) < 0)
+  if (write(sotcp, data_snd, strlen(data_snd) + 1) < 0)
     {
       perror("assolo_rcv_tcp: write");
       exit(1);

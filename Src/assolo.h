@@ -31,6 +31,7 @@
 #define SNDPORT		  8365		/* port on which sender waits */
 #define TCPRCVPORT	  7365		/* port on which receiver waits */
 #define MAXRCVBUF	  32768		/* Maximum receive buffer */
+#define PARAMSTRING_MAX	  300		/* Max Length of Parameter string */
 #define	NO		  0
 #define	YES		  1
 #define MAX_HIGH_RATE	  1500.0 	/* Maximum probing rate within chirp in Mbps */
