@@ -109,8 +109,7 @@ void recv_chall_pkt()
 
   if (check_crc_snd2rcv(udprecord))
     {
-      /* J2 : double check this, looks like a bug ! */
-      if (ntohl(udprecord->request_num == request_num))
+      if (ntohl(udprecord->request_num) == request_num)
       	{
 	  chal_no = ntohl(udprecord->chal_no);
 	  if(debug)

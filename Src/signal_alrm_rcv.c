@@ -111,6 +111,7 @@ void sig_alrm(int signo)
 double timer_gran()
 {
   struct itimerval tv;
+  double granularity;
 
   /* Find out what is the system clock granularity.  */
   tv.it_interval.tv_sec = 0;
@@ -120,8 +121,11 @@ double timer_gran()
   setitimer (ITIMER_REAL, &tv, 0);
   setitimer (ITIMER_REAL, 0, &tv);
 
-  if(debug)
-    fprintf(stderr, "min timer gran=%f sec\n", (double) tv.it_interval.tv_sec + ((double) tv.it_interval.tv_usec) / 1000000.0);
+  granularity = ( (double) tv.it_interval.tv_sec
+		  + ((double) tv.it_interval.tv_usec) / 1000000.0 );
 
-  return ((double) tv.it_interval.tv_sec + ((double) tv.it_interval.tv_usec) / 1000000.0);
+  if(debug)
+    fprintf(stderr, "min timer gran=%f sec\n", granularity);
+
+  return (granularity);
 }

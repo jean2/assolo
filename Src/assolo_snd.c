@@ -536,8 +536,7 @@ void chirps_snd()
 {
   int k;
   double thr;
-
-  count=0;
+  int count;
 
   fprintf(stderr, "\rChirp Numer: %d", nc);
 
@@ -559,7 +558,7 @@ void chirps_snd()
       rates_ch[k-count-1] = (rates_ch[k-count]-(thr*pow(spread_factor,count)));
     }
 
-  for (count=0;count<num_interarrival;count++)
+  for (count = 0; count < num_interarrival; count++)
     {
       iat_ch[count] = 8 * ((double) pktsize) / rates_ch[count];
     }

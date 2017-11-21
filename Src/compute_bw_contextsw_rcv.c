@@ -230,7 +230,9 @@ void compute_stats()
   double total_qing_delay = 0.0;
   double inst_bw_excursion = 0.0;
   long nc,np;
-  int prev_pkt = 0, num_bad_pkts_this_chirp = 0,num_bad_chirps = 0;
+  int prev_pkt = 0;
+  /*int num_bad_pkts_this_chirp = 0;*/
+  int num_bad_chirps = 0;
   int context_switch = 0;
   int num_consec_bad = 0;	/* number of consecutive chirp interarrivals
 				 * affected by interrupt coalescence
@@ -349,7 +351,7 @@ void compute_stats()
 				       packet_info[count].rcv_time, nc);
 		    }
 		  total_qing_delay = 0.0;
-		  num_bad_pkts_this_chirp = 0;
+		  /*num_bad_pkts_this_chirp = 0;*/
 		}
 
 	    }

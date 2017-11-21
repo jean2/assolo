@@ -112,10 +112,4 @@ inline void smartwait2(unsigned int delg)
     } \
 } while(0)
 
-struct timeval tpstart; //used for keeping track of the start time
-struct timeval tpcur;  //used for keeping track of the current time
-unsigned int delsofar; //amount of delay we have had so far
-int count;
-unsigned int msr;
-
 #endif

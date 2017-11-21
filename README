@@ -48,8 +48,9 @@ INSTALL INSTRUCTIONS
 ====================
 Run the following:
 
-1) ./configure   
-2) make
+1) autoconf
+2) ./configure   
+3) make
 
                                                                              
 The following binaries will be generated:
