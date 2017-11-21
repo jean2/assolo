@@ -7,13 +7,17 @@
  * Returns 1 if Little Endian and 0 for Big Endian */
 int CheckIfLittleEndian(void)
 {
-    short int Two_byte_size = 1;						// Works this way:
-    char     *One_byte_size = (char *) &Two_byte_size;	// shortened => (0000) 0001 ... If BE => (0001) 0000 = 0 | if LE => (0000) 0001 = 1
+	/* Works this way:
+	 * shortened => (0000) 0001 ...
+	 * If BE => (0001) 0000 = 0
+	 * If LE => (0000) 0001 = 1 */
+	short int Two_byte_size = 1;
+	char     *One_byte_size = (char *) &Two_byte_size;
 
-    if(One_byte_size[0] == 1)
-    	return(1); // True
-    else
-    	return(0);	// False
+	if(One_byte_size[0] == 1)
+		return(1);	// True
+	else
+		return(0);	// False
 }
 
 /* //TODO Comment Function */

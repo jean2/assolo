@@ -27,6 +27,6 @@
 #include "realtime.h"
 #include "assolo.h"
 
-#define RTTUSEC 1000000 /* assuming RTT is 1000 millisec*/
+#define RTTUSEC 1000000		/* assuming RTT is 1000 millisec*/
 
 #endif

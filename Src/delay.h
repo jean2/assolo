@@ -33,77 +33,84 @@
 #include <unistd.h>
 #include <sys/time.h>
 
+/* This should be set to the maximum amount of time that the system could
+ * take to return from a usleep(100) call. It's better to err on the side of
+ * a higher value here. Basically, smartbusywait(N) will use usleep if N
+ * is greater than sleepthresh.  For the linux system this was developed on,
+ * 20000 worked very well.  Measured in microseconds. */
 #define SLEEPTHRESH 20700
 
-//This should be set to the maximum amount of time that the system could
-//take to return from a usleep(100) call. It's better to err on the side of
-//a higher value here. Basically, smartbusywait(N) will use usleep if N
-//is greater than sleepthresh.  For the linux system this was developed on,
-//20000 worked very well.  Measured in microseconds
-
+/* the amount of time that the system tries to sleep for.
+ * making this greater than sleepthresh would be a VERY BAD idea
+ * a setting this low takes advantage of the minimum sleep
+ * period that linux seems to have. */
 #define SLEEPSTEP (SLEEPTHRESH / 10)
-//the amount of time that the system tries to sleep for.
-//making this greater than sleepthresh would be a VERY BAD idea
-//a setting this low takes advantage of the minimum sleep
-//period that linux seems to have
 
 
 /* //TODO Comment Function */
 inline void smartwait(unsigned int delg, struct timeval *tpcur)
 {
-  	unsigned int delsofar;
-  	struct timeval tpstart=*tpcur;
-  	//  int count=0;
-  	gettimeofday(tpcur,(struct timezone *)0);
-  	delsofar=(tpcur->tv_sec - tpstart.tv_sec)*1000000 + (tpcur->tv_usec - tpstart.tv_usec);
-  	//  fprintf(stderr, "delg= %u, delsofar= %u", delg, delsofar);
-  	while ((int)(delg-delsofar) >= SLEEPTHRESH)
-  	{
-    	//     fprintf(stderr, "BIG SLEEP, %d\n", (int)(delg-delsofar));
-    	usleep((unsigned) SLEEPSTEP);
-    	gettimeofday(tpcur,(struct timezone *)0);
-       	delsofar=(tpcur->tv_sec - tpstart.tv_sec)*1000000 + (tpcur->tv_usec - tpstart.tv_usec);
-  	}
-  	while (delsofar < delg)
-  	{
-    	//    count++;
-    	gettimeofday(tpcur,(struct timezone *)0);
-       	delsofar=(tpcur->tv_sec - tpstart.tv_sec)*1000000 + (tpcur->tv_usec - tpstart.tv_usec);
-  	}
-};
+  unsigned int delsofar;
+  struct timeval tpstart = *tpcur;
+
+  //  int count=0;
+  gettimeofday(tpcur, (struct timezone *) 0);
+  delsofar = ( (tpcur->tv_sec - tpstart.tv_sec) * 1000000
+	       + (tpcur->tv_usec - tpstart.tv_usec) );
+  //  fprintf(stderr, "delg= %u, delsofar= %u", delg, delsofar);
+  while ((int) (delg - delsofar) >= SLEEPTHRESH)
+    {
+      //     fprintf(stderr, "BIG SLEEP, %d\n", (int) (delg - delsofar));
+      usleep((unsigned) SLEEPSTEP);
+      gettimeofday(tpcur, (struct timezone *) 0);
+      delsofar = ( (tpcur->tv_sec - tpstart.tv_sec) * 1000000
+		   + (tpcur->tv_usec - tpstart.tv_usec) );
+    }
+  while (delsofar < delg)
+    {
+      //    count++;
+      gettimeofday(tpcur, (struct timezone *)0);
+      delsofar = ( (tpcur->tv_sec - tpstart.tv_sec) * 1000000
+		   + (tpcur->tv_usec - tpstart.tv_usec) );
+    }
+}
 
 
-//a macro that "returns" after delg microseconds, intelligently uses usleep
-//if the desired delay is large enough to allow the context switch. This
-//greatly lowers the needed processor cycles of the macro.
+/* A macro that "returns" after delg microseconds, intelligently uses usleep
+ * if the desired delay is large enough to allow the context switch. This
+ * greatly lowers the needed processor cycles of the macro. */
 inline void smartwait2(unsigned int delg)
 {
-  	struct timeval tpstart, tpcur;
-  	//used for keeping track of the start time and current time
-  	unsigned int delsofar=0;
-  	int count=0;
-  	gettimeofday(&tpstart,(struct timezone *)0);
- 	while (delsofar < delg)
- 	{
-    	if ((delg-delsofar) >= SLEEPTHRESH) usleep(SLEEPSTEP);
-    	gettimeofday(&tpcur,(struct timezone *)0);
-    	delsofar=(tpcur.tv_sec - tpstart.tv_sec)*1000000 + (tpcur.tv_usec - tpstart.tv_usec);
-    	count++;
-  	}
-};
+  /* used for keeping track of the start time and current time */
+  struct timeval tpstart;
+  struct timeval tpcur;
+  unsigned int delsofar = 0;
+  int count = 0;
+
+  gettimeofday(&tpstart, (struct timezone *) 0);
+  while (delsofar < delg)
+    {
+      if ((delg - delsofar) >= SLEEPTHRESH)
+	usleep(SLEEPSTEP);
+      gettimeofday(&tpcur, (struct timezone *) 0);
+      delsofar = ( (tpcur.tv_sec - tpstart.tv_sec) * 1000000
+		   + (tpcur.tv_usec - tpstart.tv_usec) );
+      count++;
+    }
+}
 
 
-//a macro that "returns" after delg microseconds, never
-//sleeps, a true busy wait. Uses processor cycles like crazy
-//you probably will never want to use this.
-#define busywait(delg) do {\
-    gettimeofday(&tpstart,(struct timezone *)0); \
-    delsofar = 0;\
-    while (delsofar < delg){ \
-        gettimeofday(&tpcur,(struct timezone *)0);\
-        delsofar=(tpcur.tv_sec - tpstart.tv_sec)*1000000 + (tpcur.tv_usec - tpstart.tv_usec);\
-    }\
-}while(0)
+/* A macro that "returns" after delg microseconds, never
+ * sleeps, a true busy wait. Uses processor cycles like crazy
+ * you probably will never want to use this. */
+#define busywait(delg) do { \
+    gettimeofday(&tpstart, (struct timezone *) 0); \
+    delsofar = 0; \
+    while (delsofar < delg) { \
+        gettimeofday(&tpcur, (struct timezone *) 0); \
+        delsofar=(tpcur.tv_sec - tpstart.tv_sec)*1000000 + (tpcur.tv_usec - tpstart.tv_usec); \
+    } \
+} while(0)
 
 struct timeval tpstart; //used for keeping track of the start time
 struct timeval tpcur;  //used for keeping track of the current time

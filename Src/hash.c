@@ -100,7 +100,7 @@ u_int32_t gen_crc_rcv2snd(struct control_rcv2snd *pkt)
   	crc  =hash(crc, ntohl(pkt->timesec));
   	crc = hash(crc, ntohl(pkt->timeusec));
   	crc = hash(crc, ntohl(pkt->chal_no));
-    crc = hash(crc, ntohl(pkt->num_interarrival));
+  	crc = hash(crc, ntohl(pkt->num_interarrival));
   	crc = hash(crc, ntohl(pkt->filter));
   	crc = hash(crc, ntohl(pkt->pktsize));
 
@@ -123,7 +123,7 @@ int check_crc_rcv2snd(struct control_rcv2snd *pkt)
   	crc=gen_crc_rcv2snd(pkt);
 
   	if (crc==ntohl(pkt->checksum))
-    	return 1;
+		return 1;
   	else
   		return 0;
 }
@@ -151,8 +151,8 @@ int check_crc_snd2rcv(struct udprecord *pkt)
 
   	crc=gen_crc_snd2rcv(pkt);
   	if (crc==ntohl(pkt->checksum))
-    	return 1;
+		return 1;
   	else
-    	return 0;
+		return 0;
 }
 
