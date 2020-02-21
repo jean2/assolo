@@ -618,7 +618,7 @@ void parse_cmd_line_run(int argc, char *argv[])
       fprintf(stderr,"Ratio of high/low rate very large, increasing low_rate\n");
       low_rate = high_rate / 1000.0;
     }
-  if (high_rate < 5.0*low_rate)
+  if ( (high_rate < 5.0*low_rate) && (spread_factor > 1.05) )
     {
       fprintf(stderr,"Ratio of high/low rate very low, increasing high_rate\n");
       high_rate = 5 * low_rate;

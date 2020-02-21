@@ -40,7 +40,7 @@
 #define	MAXFNAME	  140		/* Maximum filename */
 #define	MAXMESG		  8200		/* Maximum packet size */
 #define	MAXCHIRPSIZE	  200		/* Maximum number of packets in a chirp */
-#define MINSPREAD 	  1.1
+#define MINSPREAD 	  1.001
 #define MINPKTSIZE 	  40
 #define MAX_RECV_OK_COUNT 30 
 #define DEFAULT_MIN_RATE  10.0

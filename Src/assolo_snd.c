@@ -331,7 +331,7 @@ int compute_parameters()
   soglia	= soglia / 100.0;	// f.e 5% to 0.05 for Threshold calculation
 
   /* check if parameters ok */
-  if (pktsize < 40 || spread_factor < 1.05 || inter_chirp_time < 0.0 || low_rate < 0.0 || num_interarrival < 1 || jumbo < 1 || jumbo > 20)
+  if (pktsize < 40 || spread_factor < MINSPREAD || inter_chirp_time < 0.0 || low_rate < 0.0 || num_interarrival < 1 || jumbo < 1 || jumbo > 20)
     pars_ok=0;
 
   chirp_duration=0;
@@ -357,6 +357,12 @@ int compute_parameters()
       iat_snd[count] = 8 * ((double) pktsize) / rates_snd[count];
       chirp_duration += iat_snd[count];
     }
+
+#ifdef DEBUG_RATE
+  fprintf(stderr, "Num packets=%d,Inter chirps=%fs\n", num_interarrival, inter_chirp_time);
+  for (count = 0; count < num_interarrival; count++)
+    fprintf(stderr, "Rate[%d]=%f, IAT[%d]=%f\n", count, rates_snd[count], count, iat_snd[count]);
+#endif
 
   if(debug)
     fprintf(stderr, "chirp %f\n", chirp_duration);

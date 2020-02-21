@@ -454,7 +454,7 @@ void parse_cmd_line(int argc, char *argv[])
       low_rate = high_rate / 1000.0;
     }
 
-  if (high_rate < 5.0 * low_rate)
+  if ( (high_rate < 5.0 * low_rate) && (spread_factor > 1.05) )
     {
       fprintf(stderr, "Ratio of high/low rate very low, increasing high_rate\n");
       high_rate = 5 * low_rate;
@@ -548,6 +548,12 @@ void compute_parameters()
 		       * pktsize / (avg_rate * 1000000.0) );
   if (inter_chirp_time <= chirp_duration)
     inter_chirp_time = 2.0 * chirp_duration;
+
+#ifdef DEBUG_RATE
+  fprintf(stderr, "Num packets=%d,Inter chirps=%fs\n", max_good_pkt_this_chirp, inter_chirp_time);
+  for (count = 0; count < num_interarrival; count++)
+    fprintf(stderr, "Rate[%d]=%f, IAT[%d]=%f\n", count, rates_here[count], count, iat_here[count]);
+#endif
 
   /* Write once every chirp */
   write_interval = chirp_duration + (inter_chirp_time - chirp_duration) / 2;
