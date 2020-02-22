@@ -543,8 +543,14 @@ void chirps_snd()
   int k;
   double thr;
   int count;
+  struct timeval tp_start;
+  struct timeval tp_finish;
+  long long duration;
+  double total_sleep = 0LL;
+  double rate_actual;
+  double rate_expected;
 
-  fprintf(stderr, "\rChirp Numer: %d", nc);
+  //fprintf(stderr, "\rChirp Numer: %d", nc);
 
   /********* BEGIN CHIRP ********/
 
@@ -579,6 +585,7 @@ void chirps_snd()
      time difference */
   /* Hack because sleeptime gets divided before the first sleep period*/
   gettimeofday(&tp1, (struct timezone *) 0);
+  memcpy(&tp_start, &tp1, sizeof(struct timeval));
   tp1.tv_usec -= 100000;
 
   for (np = 1; np <= num_interarrival + 1; np++)
@@ -600,6 +607,18 @@ void chirps_snd()
       pktsend++;		/* number of packets sent */
     }
   /********* END CHIRP ********/
+  gettimeofday(&tp_finish, (struct timezone *) 0);
+  duration = (tp_finish.tv_usec - tp_start.tv_usec) + 1000000LL * (tp_finish.tv_sec - tp_start.tv_sec);
+  rate_actual = (8.0 * pktsize * num_interarrival * jumbo) / duration;
+  sleeptime = iat_ch[0];
+  for (np = 1; np <= num_interarrival + 1; np++)
+    {
+      total_sleep += sleeptime * jumbo;
+      sleeptime = iat_ch[np];
+    }
+  rate_expected = (8.0 * pktsize * num_interarrival * jumbo) / total_sleep;
+
+  fprintf(stderr, "Chirp=%d, actual send rate=%fMb/s, expected send rate=%fMb/s\n", nc, rate_actual, rate_expected);
 
   nc++;
   /* gap between two successive packet trains */
